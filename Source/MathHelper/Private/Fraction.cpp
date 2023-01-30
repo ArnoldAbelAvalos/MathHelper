@@ -3,7 +3,7 @@
 
 #include "Fraction.h"
 #include "DrawDebugHelpers.h"
-#include "Kismet/KismetMathLibrary.h"
+#include "SceneManagement.h"
 
 // Sets default values
 AFraction::AFraction()
@@ -18,19 +18,35 @@ void AFraction::BeginPlay()
 	Super::BeginPlay();
 }
 
+
 // Called every frame
 void AFraction::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!Denominator) { return; } // If denominator is 0 return
+	switch (Format)
+	{
+	case DisplayFormat::WireFrameCircle:
+	case DisplayFormat::Circle:
+		DrawCircle();
+		break;
+	case DisplayFormat::Rectangle:
+		DrawRectangle();
+		break;
+	default:
+		DrawCircle();
+		break;
+	}
+}
 
-	if (!Denominator) { return; }
 
-	SegmentAngle = 360 / Denominator;
+void AFraction::DrawCircle()
+{
 	DrawDebugCircle(GetWorld(),
 	                GetActorLocation(),
 	                Radius,
 	                360,
-	                FColor::Red,
+	                SecondaryColor,
 	                false,
 	                -1.0f,
 	                0,
@@ -40,18 +56,79 @@ void AFraction::Tick(float DeltaTime)
 	                false
 	);
 
-	if (Denominator > 1)
+	if (Denominator <= 1 || Denominator == Numerator) { return; } // If denominator is 1 or less return
+	Segment = 360 / Denominator; //angle segment
+	for (int i = 0; i < Denominator; i++)
 	{
-		for (unsigned int i = 0; i < Denominator; i++)
-		{
-			float rotationAngle = SegmentAngle * i;
-			FVector Vector1 = GetActorForwardVector().RotateAngleAxis(rotationAngle, GetActorRightVector());
-			DrawDebugLine(GetWorld(),
-			              GetActorLocation(),
-			              GetActorLocation() + Vector1 * Radius,
-			              FColor::Green,
-			              false,
-			              -1.0f);
-		}
+		float rotationAngle = Segment * i;
+		FVector Vector1 = GetActorForwardVector().RotateAngleAxis(-rotationAngle, GetActorRightVector());
+		DrawDebugLine(GetWorld(),
+		              GetActorLocation(),
+		              GetActorLocation() + Vector1 * Radius,
+		              i <= Numerator && Numerator != 0? PrimaryColor : SecondaryColor,
+		              false,
+		              -1.0f);
+
+		if(Format != DisplayFormat::Circle){continue;} //If not a full circle continue looping
+
+		/*TArray<FVector> vertices;
+	//vertices.SetNum(3);
+	vertices.Emplace(0,0,0);
+	vertices.Emplace(100,0,0);
+	vertices.Emplace(50,0,100);
+	vertices.Emplace(0,0,200);
+	vertices.Emplace(100,0,0);
+
+	TArray<int32> indices;
+	//indices.SetNum(3);
+	indices.Emplace(2);
+	indices.Emplace(1);
+	indices.Emplace(0);
+	indices.Emplace(4);
+	indices.Emplace(3);
+	indices.Emplace(2);
+	DrawDebugMesh(GetWorld(),
+				vertices,
+				indices,
+				PrimaryColor);*/
+
+		
 	}
+}
+
+
+void AFraction::DrawRectangle()
+{
+	Segment = Radius / Denominator;
+	//Draw Square
+	const FVector center= GetActorLocation();
+	const FVector halfWidth = GetActorForwardVector() * Radius/2;
+	const FVector halfHeight = GetActorUpVector() * Radius/2;
+	const FVector vertex1(center -  halfWidth + halfHeight);
+	const FVector vertex2(center +  halfWidth + halfHeight);
+	const FVector vertex3(center -  halfWidth - halfHeight);
+	const FVector vertex4(center +  halfWidth - halfHeight);
+	DrawDebugLine(GetWorld(), vertex1, vertex2, SecondaryColor);
+	DrawDebugLine(GetWorld(), vertex3, vertex4, SecondaryColor);
+	DrawDebugLine(GetWorld(), vertex1, vertex3, SecondaryColor);
+	DrawDebugLine(GetWorld(), vertex2, vertex4, SecondaryColor);
+
+	//Draw Bars
+	if (Denominator <= 1 || Denominator == Numerator) { return; } // If denominator is 1 or less return
+	FVector top = vertex1;
+	FVector bottom = vertex3;
+	const FVector dx = GetActorForwardVector() * Segment;
+	for (int i = 0; i < Denominator; i++)
+	{
+		DrawDebugLine(GetWorld(), top, bottom,
+						i <= Numerator && Numerator != 0? PrimaryColor : SecondaryColor);
+		top += dx;
+		bottom += dx;
+	}
+
+	
+	
+	
+	
+				
 }

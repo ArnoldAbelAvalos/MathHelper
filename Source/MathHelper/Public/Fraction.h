@@ -6,6 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "Fraction.generated.h"
 
+
+UENUM(BlueprintType)
+enum DisplayFormat
+{
+	WireFrameCircle UMETA(DisplayName = "WireframeCircle"),
+	Circle UMETA(DisplayName = "Circle"),
+	Rectangle UMETA(DisplayName = "Rectangle")
+};
+
 UCLASS()
 class MATHHELPER_API AFraction : public AActor
 {
@@ -14,7 +23,7 @@ class MATHHELPER_API AFraction : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AFraction();
-
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -24,13 +33,28 @@ protected:
 
 private:	
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Props", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Props", meta = (AllowPrivateAccess = "true", DisplayName = "Radius/Base"))
 	float Radius;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Props", meta = (AllowPrivateAccess = "true"))
 	int Numerator = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Props", meta = (AllowPrivateAccess = "true"))
-	uint8 Denominator = 1;
+	int Denominator = 1;
 
-	int SegmentAngle;
+	int Segment;
+
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Display", meta = (AllowPrivateAccess = "true"))
+	TEnumAsByte<DisplayFormat> Format = DisplayFormat::Circle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Display", meta = (AllowPrivateAccess = "true"))
+	FColor PrimaryColor = FColor::Blue;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Display", meta = (AllowPrivateAccess = "true"))
+	FColor SecondaryColor = FColor::White;
+
+	void DrawCircle();
+	void DrawRectangle();
+
 };
